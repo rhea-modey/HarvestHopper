@@ -1,7 +1,9 @@
 import SwiftUI
+import MapKit
+import CoreLocation
 
 //@main
-struct YourAppNameApp: App {
+struct HarvestHopper: App {
     @StateObject private var viewModel = AppViewModel()
 
     var body: some Scene {
@@ -82,15 +84,54 @@ struct ThemeView<Content: View>: View {
     }
 }
 
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let locationManager = CLLocationManager()
+    @Published var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 35.7796, longitude: -78.6382),
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
+    
+    override init() {
+        super.init()
+        self.locationManager.delegate = self
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        self.locationManager.requestWhenInUseAuthorization()
+        self.locationManager.startUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        region = MKCoordinateRegion(
+            center: location.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        )
+    }
+}
+
 
 struct ConsumerView: View {
+    @ObservedObject var locationManager = LocationManager()
+
+    @State private var region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 35.7796, longitude: -78.6382), // Default to Raleigh
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        )
+
     @State private var location: String = ""
     
     var body: some View {
+        
         ThemeView {
             TextField("Enter your location", text: $location)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
+            
+            Map(coordinateRegion: $locationManager.region, showsUserLocation: true)
+                            .frame(height: 300)
+                            .cornerRadius(15)
+                            .padding()
+
+
             
             Button("Get Shuttle ETA") {
                 // Fetch shuttle ETA
