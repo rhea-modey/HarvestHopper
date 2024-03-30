@@ -1,6 +1,20 @@
 import SwiftUI
 
+//@main
+struct YourAppNameApp: App {
+    @StateObject private var viewModel = AppViewModel()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(viewModel)
+        }
+    }
+}
+
 struct ContentView: View {
+    @StateObject private var viewModel = AppViewModel()
+    //@EnvironmentObject var viewModel: AppViewModel
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -16,10 +30,12 @@ struct ContentView: View {
             }
             .padding()
             .navigationBarTitle("Select Role", displayMode: .inline)
-            .background(Image("lofiBackground").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
+            //.background(Image("lofiBackground").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
         }
+        .environmentObject(viewModel)
     }
 }
+
 
 struct RoleButton: View {
     var text: String
@@ -89,6 +105,7 @@ struct ConsumerView: View {
 
 
 struct FarmerView: View {
+    @EnvironmentObject var viewModel: AppViewModel
     @State private var excessInfo: String = ""
     
     var body: some View {
@@ -98,34 +115,59 @@ struct FarmerView: View {
                 .padding()
             
             Button("Submit Excess Info") {
-                // Implement functionality to submit excess info
+                viewModel.submitProduceInfo(info: excessInfo)
             }
             .padding()
             .background(Color.green)
             .foregroundColor(.white)
             .cornerRadius(10)
-            
-            Text("Shuttle to farm ETA: 10 minutes")
-                .padding()
         }
         .padding()
         .navigationTitle("Farmer")
     }
 }
 
+
 struct ShuttleView: View {
-    // This could be a list or detailed view showing assigned pickups
+    @EnvironmentObject var viewModel: AppViewModel
+    
     var body: some View {
         VStack {
-            // Placeholder for received excess info and locations
-            Text("Assigned Pickups")
-                .padding()
+            if let info = viewModel.excessProduceInfo {
+                Text("Assigned Pickups: \(info)")
+                    .padding()
+            }
             
-            // Details for each assignment could be listed here
-            Text("Farm XYZ: 10 minutes away")
-                .padding()
+            if let countdown = viewModel.shuttleCountdown {
+                Text("Shuttle ETA: \(countdown / 60) minutes")
+                    .padding()
+            } else {
+                Text("No current pickups")
+                    .padding()
+            }
         }
         .padding()
         .navigationTitle("Shuttle")
     }
 }
+
+
+class AppViewModel: ObservableObject {
+    @Published var excessProduceInfo: String? = nil
+    @Published var shuttleCountdown: Int? = nil
+    @Published var timer: Timer?
+    
+    func submitProduceInfo(info: String) {
+        excessProduceInfo = info
+        shuttleCountdown = 600 // 10 minutes in seconds
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            if let countdown = self?.shuttleCountdown, countdown > 0 {
+                self?.shuttleCountdown = countdown - 1
+            } else {
+                self?.timer?.invalidate()
+                self?.timer = nil
+            }
+        }
+    }
+}
+
