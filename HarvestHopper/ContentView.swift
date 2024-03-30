@@ -3,63 +3,90 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 20) {
                 NavigationLink(destination: ConsumerView()) {
-                    Text("Consumer")
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.purple)
-                        .cornerRadius(10)
+                    RoleButton(text: "Consumer", color: .blue)
                 }
                 NavigationLink(destination: FarmerView()) {
-                    Text("Farmer")
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .cornerRadius(10)
+                    RoleButton(text: "Farmer", color: .green)
                 }
                 NavigationLink(destination: ShuttleView()) {
-                    Text("Shuttle")
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.orange)
-                        .cornerRadius(10)
+                    RoleButton(text: "Shuttle", color: .orange)
                 }
             }
             .padding()
             .navigationBarTitle("Select Role", displayMode: .inline)
+            .background(Image("lofiBackground").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
         }
     }
 }
+
+struct RoleButton: View {
+    var text: String
+    var color: Color
+    
+    var body: some View {
+        Text(text)
+            .fontWeight(.medium)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(color.opacity(0.8))
+            .cornerRadius(10)
+            .shadow(radius: 5) // Adds a subtle shadow for depth
+    }
+}
+
+struct ThemedButtonStyle: ButtonStyle {
+    var color: Color
+    
+    func makeBody(configuration: Self.Configuration) -> some View {
+        configuration.label
+            .foregroundColor(.white)
+            .padding()
+            .background(color.opacity(configuration.isPressed ? 0.5 : 0.8))
+            .cornerRadius(10)
+            .shadow(radius: 5)
+    }
+}
+
+struct ThemeView<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(spacing: 20) { content }
+            .padding()
+            .background(Image("lofiBackground").resizable().scaledToFill()) // Background image
+            .cornerRadius(15)
+            .padding()
+    }
+}
+
 
 struct ConsumerView: View {
     @State private var location: String = ""
     
     var body: some View {
-        VStack {
+        ThemeView {
             TextField("Enter your location", text: $location)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
             
             Button("Get Shuttle ETA") {
-                // Implement functionality to fetch shuttle ETA
+                // Fetch shuttle ETA
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .buttonStyle(ThemedButtonStyle(color: Color.blue))
             
-            // Display ETA information here
-            Text("Shuttle ETA: 10 minutes")
-                .padding()
+            Text("Shuttle ETA: 10 minutes").padding()
         }
-        .padding()
         .navigationTitle("Consumer")
     }
 }
+
 
 struct FarmerView: View {
     @State private var excessInfo: String = ""
