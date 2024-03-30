@@ -107,6 +107,7 @@ struct ConsumerView: View {
 struct FarmerView: View {
     @EnvironmentObject var viewModel: AppViewModel
     @State private var excessInfo: String = ""
+    @State private var showAlert = false
     
     var body: some View {
         VStack {
@@ -116,6 +117,7 @@ struct FarmerView: View {
             
             Button("Submit Excess Info") {
                 viewModel.submitProduceInfo(info: excessInfo)
+                showAlert = true // Show alert on submission
             }
             .padding()
             .background(Color.green)
@@ -124,6 +126,17 @@ struct FarmerView: View {
         }
         .padding()
         .navigationTitle("Farmer")
+        .alert(isPresented: $showAlert) { // Use the showAlert state to present an alert
+                    Alert(
+                        title: Text("Submission Confirmed"),
+                        message: Text("Your excess produce info has been submitted successfully."),
+                        dismissButton: .default(Text("OK")) {
+                            // Optionally reset form or perform an action when dismissed
+                            excessInfo = "" // Reset the text field
+                        }
+                    )
+                }
+
     }
 }
 
@@ -156,18 +169,21 @@ class AppViewModel: ObservableObject {
     @Published var excessProduceInfo: String? = nil
     @Published var shuttleCountdown: Int? = nil
     @Published var timer: Timer?
+    @Published var submissionConfirmed: Bool = false
+
     
     func submitProduceInfo(info: String) {
         excessProduceInfo = info
         shuttleCountdown = 600 // 10 minutes in seconds
+        submissionConfirmed = true // Confirm submission
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             if let countdown = self?.shuttleCountdown, countdown > 0 {
                 self?.shuttleCountdown = countdown - 1
             } else {
                 self?.timer?.invalidate()
                 self?.timer = nil
+                self?.submissionConfirmed = false
             }
         }
     }
 }
-
