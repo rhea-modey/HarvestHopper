@@ -1,90 +1,104 @@
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-    
     var body: some View {
-        NavigationSplitView {
-            List {
-                Section(header: Text("Roles")) {
-                    NavigationLink(destination: ConsumerView()) {
-                        Text("Consumer")
-                    }
-                    NavigationLink(destination: FarmerView()) {
-                        Text("Farmer")
-                    }
-                    NavigationLink(destination: ShuttleView()) {
-                        Text("Shuttle")
-                    }
+        NavigationView {
+            VStack {
+                NavigationLink(destination: ConsumerView()) {
+                    Text("Consumer")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.purple)
+                        .cornerRadius(10)
                 }
-                
-                Section(header: Text("Items")) {
-                    ForEach(items) { item in
-                        NavigationLink {
-                            Text("Item at \(item.timestamp, format: .dateTime)")
-                        } label: {
-                            Text(item.timestamp, format: .dateTime)
-                        }
-                    }
-                    .onDelete(perform: deleteItems)
+                NavigationLink(destination: FarmerView()) {
+                    Text("Farmer")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .cornerRadius(10)
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+                NavigationLink(destination: ShuttleView()) {
+                    Text("Shuttle")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
+                        .cornerRadius(10)
                 }
             }
-        } detail: {
-            Text("Select an item or role")
-        }
-    }
-    
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            newItem.timestamp = Date()
-            try? modelContext.save()
-        }
-    }
-    
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(modelContext.delete)
-            try? modelContext.save()
+            .padding()
+            .navigationBarTitle("Select Role", displayMode: .inline)
         }
     }
 }
 
-// Placeholder Views for each role
 struct ConsumerView: View {
+    @State private var location: String = ""
+    
     var body: some View {
-        Text("Consumer Interface")
+        VStack {
+            TextField("Enter your location", text: $location)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+            
+            Button("Get Shuttle ETA") {
+                // Implement functionality to fetch shuttle ETA
+            }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            
+            // Display ETA information here
+            Text("Shuttle ETA: 10 minutes")
+                .padding()
+        }
+        .padding()
+        .navigationTitle("Consumer")
     }
 }
 
 struct FarmerView: View {
+    @State private var excessInfo: String = ""
+    
     var body: some View {
-        Text("Farmer Interface")
+        VStack {
+            TextField("Enter excess produce info", text: $excessInfo)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+            
+            Button("Submit Excess Info") {
+                // Implement functionality to submit excess info
+            }
+            .padding()
+            .background(Color.green)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            
+            Text("Shuttle to farm ETA: 10 minutes")
+                .padding()
+        }
+        .padding()
+        .navigationTitle("Farmer")
     }
 }
 
 struct ShuttleView: View {
+    // This could be a list or detailed view showing assigned pickups
     var body: some View {
-        Text("Shuttle Interface")
-    }
-}
-
-// Placeholder for Preview
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-        // Add .modelContainer preview modifier if applicable
+        VStack {
+            // Placeholder for received excess info and locations
+            Text("Assigned Pickups")
+                .padding()
+            
+            // Details for each assignment could be listed here
+            Text("Farm XYZ: 10 minutes away")
+                .padding()
+        }
+        .padding()
+        .navigationTitle("Shuttle")
     }
 }
