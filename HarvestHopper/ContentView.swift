@@ -1,28 +1,35 @@
-//
-//  ContentView.swift
-//  HarvestHopper
-//
-//  Created by Rhea Modey on 3/30/24.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [Item]
-
+    
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                Section(header: Text("Roles")) {
+                    NavigationLink(destination: ConsumerView()) {
+                        Text("Consumer")
+                    }
+                    NavigationLink(destination: FarmerView()) {
+                        Text("Farmer")
+                    }
+                    NavigationLink(destination: ShuttleView()) {
+                        Text("Shuttle")
                     }
                 }
-                .onDelete(perform: deleteItems)
+                
+                Section(header: Text("Items")) {
+                    ForEach(items) { item in
+                        NavigationLink {
+                            Text("Item at \(item.timestamp, format: .dateTime)")
+                        } label: {
+                            Text(item.timestamp, format: .dateTime)
+                        }
+                    }
+                    .onDelete(perform: deleteItems)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -35,27 +42,49 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            Text("Select an item")
+            Text("Select an item or role")
         }
     }
-
+    
     private func addItem() {
         withAnimation {
             let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            newItem.timestamp = Date()
+            try? modelContext.save()
         }
     }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            offsets.map { items[$0] }.forEach(modelContext.delete)
+            try? modelContext.save()
         }
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+// Placeholder Views for each role
+struct ConsumerView: View {
+    var body: some View {
+        Text("Consumer Interface")
+    }
+}
+
+struct FarmerView: View {
+    var body: some View {
+        Text("Farmer Interface")
+    }
+}
+
+struct ShuttleView: View {
+    var body: some View {
+        Text("Shuttle Interface")
+    }
+}
+
+// Placeholder for Preview
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+        // Add .modelContainer preview modifier if applicable
+    }
 }
