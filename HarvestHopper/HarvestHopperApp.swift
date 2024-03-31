@@ -5,11 +5,14 @@
 //  Created by Rhea Modey on 3/30/24.
 //
 
+
 import SwiftUI
 import SwiftData
 
 @main
 struct HarvestHopperApp: App {
+    @StateObject private var viewModel = AppViewModel()
+    let locationManager = LocationManager()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,

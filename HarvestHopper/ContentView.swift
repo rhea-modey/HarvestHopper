@@ -2,20 +2,13 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-//@main
-struct HarvestHopper: App {
-    @StateObject private var viewModel = AppViewModel()
 
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environmentObject(viewModel)
-        }
-    }
-}
 
 struct ContentView: View {
+    
     @StateObject private var viewModel = AppViewModel()
+    //@StateObject private var locationManager = LocationManager()
+    @ObservedObject var locationManager = LocationManager()
     //@EnvironmentObject var viewModel: AppViewModel
     var body: some View {
         NavigationView {
@@ -27,14 +20,13 @@ struct ContentView: View {
                     RoleButton(text: "Farmer", color: .green)
                     
                 }
-                NavigationLink(destination: ShuttleView()) {
+                NavigationLink(destination: ShuttleView(locationManager: locationManager)) {
                     RoleButton(text: "Shuttle", color: .orange)
                 }
             }
             .padding()
-//            .navigationBarTitle("Select Role", displayMode: .inline)
-//            .font(.title)
-//                    .padding()
+            .environmentObject(viewModel) // Provide the view model as an environment object
+            .environmentObject(locationManager)
             
             .background(Image("image").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
         
@@ -236,29 +228,38 @@ struct FarmerView: View {
     }
 }
 
-
-
 struct ShuttleView: View {
     @EnvironmentObject var viewModel: AppViewModel
-    @StateObject var locationManager = LocationManager()
+    var locationManager: LocationManager
+    
+    private var regionBinding: Binding<MKCoordinateRegion> {
+            Binding<MKCoordinateRegion>(
+                get: { locationManager.region },
+                set: { locationManager.region = $0 }
+            )
+        }
     
     var body: some View {
         VStack {
-            // Display all assigned pickups along with their ETA
-            ForEach(viewModel.excessProduceInfo.indices, id: \.self) { index in
-                if let countdown = viewModel.shuttleCountdown {
-                    Text("Assigned Pickup: \(viewModel.excessProduceInfo[index]), ETA: \(countdown / 60) minutes")
-                        .padding()
+            
+            if let countdown = viewModel.shuttleCountdown {
+                            ForEach(viewModel.excessProduceInfo.indices, id: \.self) { index in
+                                Text("Assigned Pickup: \(viewModel.excessProduceInfo[index]), ETA: \(countdown / 60) minutes")
+                                    .padding()
+                            }
+                
+
+                Map(coordinateRegion: regionBinding, showsUserLocation: true)
+                                    .edgesIgnoringSafeArea(.all)
+                                    .frame(height: 300)
+                                    .cornerRadius(15)
+                                    .padding()
+
                 } else {
                     Text("No current pickups")
                         .padding()
                 }
-                Map(coordinateRegion: $locationManager.region, showsUserLocation: true)
-                                .edgesIgnoringSafeArea(.all)
-                                .frame(height: 300)
-                                .cornerRadius(15)
-                                .padding()
-            }
+            
         }
         .navigationTitle("Shuttle")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -269,6 +270,8 @@ struct ShuttleView: View {
                 .edgesIgnoringSafeArea(.all)
         )
     }
+    
+  
 }
 
 
