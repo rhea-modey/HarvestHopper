@@ -118,6 +118,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 struct ConsumerView: View {
     @ObservedObject var locationManager = LocationManager()
+    //@EnvironmentObject var locationManager: LocationManager
 
     @State private var region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 35.7796, longitude: -78.6382), // Default to Raleigh
