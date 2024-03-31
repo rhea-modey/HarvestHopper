@@ -25,14 +25,21 @@ struct ContentView: View {
                 }
                 NavigationLink(destination: FarmerView()) {
                     RoleButton(text: "Farmer", color: .green)
+                    
                 }
                 NavigationLink(destination: ShuttleView()) {
                     RoleButton(text: "Shuttle", color: .orange)
                 }
             }
             .padding()
-            .navigationBarTitle("Select Role", displayMode: .inline)
-            //.background(Image("lofiBackground").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
+//            .navigationBarTitle("Select Role", displayMode: .inline)
+//            .font(.title)
+//                    .padding()
+            
+            .background(Image("image").resizable().scaledToFill()) // Assuming you have a lo-fi themed background image
+        
+            
+         
         }
         .environmentObject(viewModel)
     }
@@ -141,6 +148,7 @@ struct ConsumerView: View {
             Text("Shuttle ETA: 10 minutes").padding()
         }
         .navigationTitle("Consumer")
+        .background(Image("bottom3").resizable().scaledToFill())
     }
 }
 
@@ -149,6 +157,7 @@ struct FarmerView: View {
     @EnvironmentObject var viewModel: AppViewModel
     @State private var excessInfo: String = ""
     @State private var showAlert = false
+    
     
     var body: some View {
         VStack {
@@ -162,11 +171,14 @@ struct FarmerView: View {
             }
             .padding()
             .background(Color.green)
+            
             .foregroundColor(.white)
             .cornerRadius(10)
         }
-        .padding()
+        //.padding()
         .navigationTitle("Farmer")
+        .background(Image("bottom3").resizable().scaledToFill())
+        
         .alert(isPresented: $showAlert) { // Use the showAlert state to present an alert
                     Alert(
                         title: Text("Submission Confirmed"),
@@ -200,8 +212,9 @@ struct ShuttleView: View {
                     .padding()
             }
         }
-        .padding()
+        //.padding()
         .navigationTitle("Shuttle")
+        .background(Image("bottom3").resizable().scaledToFill())
     }
 }
 
