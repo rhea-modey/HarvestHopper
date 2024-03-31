@@ -239,6 +239,7 @@ struct FarmerView: View {
 
 struct ShuttleView: View {
     @EnvironmentObject var viewModel: AppViewModel
+    @StateObject var locationManager = LocationManager()
     
     var body: some View {
         VStack {
@@ -251,6 +252,11 @@ struct ShuttleView: View {
                     Text("No current pickups")
                         .padding()
                 }
+                Map(coordinateRegion: $locationManager.region, showsUserLocation: true)
+                                .edgesIgnoringSafeArea(.all)
+                                .frame(height: 300)
+                                .cornerRadius(15)
+                                .padding()
             }
         }
         .navigationTitle("Shuttle")
