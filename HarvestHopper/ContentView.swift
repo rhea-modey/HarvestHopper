@@ -152,12 +152,48 @@ struct ConsumerView: View {
     }
 }
 
+struct MapView: UIViewRepresentable {
+    var pickupLocations: [String]
+
+    func makeUIView(context: Context) -> MKMapView {
+        MKMapView(frame: .zero)
+    }
+
+    func updateUIView(_ view: MKMapView, context: Context) {
+        // Remove previous annotations
+        view.removeAnnotations(view.annotations)
+        
+        // Add new annotations for pickup locations
+        for location in pickupLocations {
+            let annotation = MKPointAnnotation()
+            annotation.title = location
+            view.addAnnotation(annotation)
+        }
+        
+        // Center the map on the first pickup location
+        if let firstLocation = pickupLocations.first,
+           let coordinate = getLocationCoordinates(from: firstLocation) {
+            let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
+            view.setRegion(region, animated: true)
+        }
+    }
+    
+    private func getLocationCoordinates(from address: String) -> CLLocationCoordinate2D? {
+        let geocoder = CLGeocoder()
+        var coordinates: CLLocationCoordinate2D?
+        geocoder.geocodeAddressString(address) { placemarks, error in
+            if let placemark = placemarks?.first {
+                coordinates = placemark.location?.coordinate
+            }
+        }
+        return coordinates
+    }
+}
 
 struct FarmerView: View {
     @EnvironmentObject var viewModel: AppViewModel
     @State private var excessInfo: String = ""
     @State private var showAlert = false
-    
     
     var body: some View {
         VStack {
@@ -168,30 +204,37 @@ struct FarmerView: View {
             Button("Submit Excess Info") {
                 viewModel.submitProduceInfo(info: excessInfo)
                 showAlert = true // Show alert on submission
+                excessInfo = "" // Clear the text field after submission
             }
             .padding()
             .background(Color.green)
-            
             .foregroundColor(.white)
             .cornerRadius(10)
-        }
-        //.padding()
-        .navigationTitle("Farmer")
-        .background(Image("bottom3").resizable().scaledToFill())
-        
-        .alert(isPresented: $showAlert) { // Use the showAlert state to present an alert
-                    Alert(
-                        title: Text("Submission Confirmed"),
-                        message: Text("Your excess produce info has been submitted successfully."),
-                        dismissButton: .default(Text("OK")) {
-                            // Optionally reset form or perform an action when dismissed
-                            excessInfo = "" // Reset the text field
-                        }
-                    )
+            
+            List {
+                ForEach(viewModel.excessProduceInfo, id: \.self) { info in
+                    Text(info)
                 }
-
+            }
+            .padding()
+        }
+        .navigationTitle("Farmer")
+        .background(
+            Image("bottom3")
+                .resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all)
+        )
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text("Submission Confirmed"),
+                message: Text("Your excess produce info has been submitted successfully."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 }
+
 
 
 struct ShuttleView: View {
@@ -199,45 +242,44 @@ struct ShuttleView: View {
     
     var body: some View {
         VStack {
-            if let info = viewModel.excessProduceInfo {
-                Text("Assigned Pickups: \(info)")
-                    .padding()
-            }
-            
-            if let countdown = viewModel.shuttleCountdown {
-                Text("Shuttle ETA: \(countdown / 60) minutes")
-                    .padding()
-            } else {
-                Text("No current pickups")
-                    .padding()
+            // Display all assigned pickups along with their ETA
+            ForEach(viewModel.excessProduceInfo.indices, id: \.self) { index in
+                if let countdown = viewModel.shuttleCountdown {
+                    Text("Assigned Pickup: \(viewModel.excessProduceInfo[index]), ETA: \(countdown / 60) minutes")
+                        .padding()
+                } else {
+                    Text("No current pickups")
+                        .padding()
+                }
             }
         }
-        //.padding()
         .navigationTitle("Shuttle")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-                    Image("bottom3")
-                        .resizable()
-                        .scaledToFill()
-                        .edgesIgnoringSafeArea(.all) // Ensure it fills the entire view including safe area
-                )
-                //.overlay(Color.red.opacity(0.5))
-       // .background(Image("bottom3").resizable().scaledToFill())
+            Image("bottom3")
+                .resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all)
+        )
     }
 }
 
 
+
 class AppViewModel: ObservableObject {
-    @Published var excessProduceInfo: String? = nil
+    @Published var excessProduceInfo: [String] = [] // Change to array
     @Published var shuttleCountdown: Int? = nil
     @Published var timer: Timer?
     @Published var submissionConfirmed: Bool = false
 
-    
     func submitProduceInfo(info: String) {
-        excessProduceInfo = info
+        excessProduceInfo.append(info) // Append to the array
         shuttleCountdown = 600 // 10 minutes in seconds
         submissionConfirmed = true // Confirm submission
+        startCountdownTimer()
+    }
+    
+    private func startCountdownTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             if let countdown = self?.shuttleCountdown, countdown > 0 {
                 self?.shuttleCountdown = countdown - 1
@@ -249,3 +291,5 @@ class AppViewModel: ObservableObject {
         }
     }
 }
+
+
