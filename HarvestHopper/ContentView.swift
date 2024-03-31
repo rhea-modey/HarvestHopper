@@ -214,7 +214,15 @@ struct ShuttleView: View {
         }
         //.padding()
         .navigationTitle("Shuttle")
-        .background(Image("bottom3").resizable().scaledToFill())
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+                    Image("bottom3")
+                        .resizable()
+                        .scaledToFill()
+                        .edgesIgnoringSafeArea(.all) // Ensure it fills the entire view including safe area
+                )
+                //.overlay(Color.red.opacity(0.5))
+       // .background(Image("bottom3").resizable().scaledToFill())
     }
 }
 
